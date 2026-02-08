@@ -32,6 +32,13 @@ import (
 // }
 
 func main() {
-	// fmt.Println(strings.Join(os.Args[1:], " "))
-	fmt.Println(os.Args[1:])
+	for index, arg := range os.Args {
+		fmt.Print(index)
+		fmt.Println(" " + arg)
+	}
 }
+
+// func main() {
+// // fmt.Println(strings.Join(os.Args[1:], " "))
+// fmt.Println(os.Args[1:])
+// }
