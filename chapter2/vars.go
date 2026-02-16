@@ -35,6 +35,14 @@ func main() {
 	x = 10
 	inc(&x)
 	fmt.Printf("x contains - %d\n", x)
+	
+	ptr := new(int)
+	fmt.Println(ptr)
+	fmt.Println(*ptr)
+	*ptr = 2
+	fmt.Println(*ptr)
+	
+	fmt.Println(newInt1() == newInt2())
 }
 
 func foo() *int {
@@ -45,4 +53,15 @@ func foo() *int {
 func inc(p *int) int {
 	*p++
 	return *p
+}
+
+/* Identical to newInt2() */
+func newInt1() *int {
+	return new(int)
+}
+
+/* Identical to newInt1() */
+func newInt2() *int {
+	var stub int
+	return &stub
 }
