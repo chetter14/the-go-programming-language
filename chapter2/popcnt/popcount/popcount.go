@@ -16,3 +16,11 @@ func PopCount(x uint64) int {
 	}
 	return total_cnt
 }
+
+func PopCountSlow(x uint64) int {
+	total_cnt := 0
+	for i := 0; i < 64; i++ {
+		total_cnt += int((x >> i) & 1)
+	}
+	return total_cnt
+}
