@@ -34,8 +34,14 @@ type Label struct {
 	Name string
 }
 
+type UsersResult struct {
+	TotalCount int `json:"total_count"`
+	Items      []*User
+}
+
 type User struct {
 	Login   string
+	Id      int
 	HTMLURL string `json:"html_url"`
 }
 
@@ -47,7 +53,7 @@ type Milestone struct {
 }
 
 var bugsList = template.Must(template.New("bugsList").Parse(`
-<h1>{{.TotalCount}} issues (bug reports)</h1>
+<h1>{{.TotalCount}} bug reports</h1>
 <table>
 <tr style='textalign:left'>
 <th>#</th>
@@ -61,6 +67,22 @@ var bugsList = template.Must(template.New("bugsList").Parse(`
 <td>{{.State}}</td>
 <td><a href='{{.User.HTMLURL}}'>{{.User.Login}}</a></td>
 <td><a href='{{.HTMLURL}}'>{{.Title}}</a></td>
+</tr>
+{{end}}
+</table>
+`))
+
+var usersList = template.Must(template.New("usersList").Parse(`
+<h1>{{.TotalCount}} users</h1>
+<table>
+<tr style='textalign:left'>
+<th>Login</th>
+<th>Id</th>
+</tr>
+{{range .Items}}
+<tr>
+<td><a href='{{.HTMLURL}}'>{{.Login}}</a></td>
+<td>{{.Id}}</td>
 </tr>
 {{end}}
 </table>
@@ -84,6 +106,37 @@ func findBugs() *IssuesResult {
 func BugReportsHandler(w http.ResponseWriter, r *http.Request) {
 	bugs := findBugs()
 	if err := bugsList.Execute(w, bugs); err != nil {
+		log.Fatal(err)
+	}
+}
+
+/* Iterate over all the issues, fill in the map of users, */
+/* and copy them into UsersResult structure */
+func getUniqueUsers() *UsersResult {
+	usersMap := make(map[int]*User)
+	for _, issue := range total_issues.Items {
+		curUserId := issue.User.Id
+
+		if _, ok := usersMap[curUserId]; !ok {
+			usersMap[curUserId] = issue.User
+		}
+	}
+
+	var usersResult UsersResult
+	usersResult.TotalCount = len(usersMap)
+
+	users := make([]*User, 0, len(usersMap))
+	for _, user := range usersMap {
+		users = append(users, user)
+	}
+	usersResult.Items = users
+
+	return &usersResult
+}
+
+func UsersHandler(w http.ResponseWriter, r *http.Request) {
+	users := getUniqueUsers()
+	if err := usersList.Execute(w, users); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -112,5 +165,6 @@ func main() {
 	resp.Body.Close()
 
 	http.HandleFunc("/bugs", BugReportsHandler)
+	http.HandleFunc("/users", UsersHandler)
 	log.Fatal(http.ListenAndServe("localhost:8000", nil))
 }
